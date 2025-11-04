@@ -9,6 +9,9 @@ public class UIManager : MonoBehaviour
     [Header("UI (TextMeshPro)")]
     public TextMeshProUGUI pickupTextTMP;   // assign PickupCounterText here
 
+    [Header("Win UI")]
+    public GameObject winText;              // drag your "WinText" UI object here
+
     [Header("Optional Settings")]
     public bool autoCountPickupsAtStart = true;
 
@@ -22,6 +25,10 @@ public class UIManager : MonoBehaviour
 
     void Start()
     {
+        // make sure win text starts hidden
+        if (winText != null)
+            winText.SetActive(false);
+
         if (autoCountPickupsAtStart)
         {
             GameObject[] pickups = GameObject.FindGameObjectsWithTag("PickUp");
@@ -61,9 +68,14 @@ public class UIManager : MonoBehaviour
     void LevelComplete()
     {
         Debug.Log("[UIManager] All pickups collected!");
+
+        // show the win text
+        if (winText != null)
+            winText.SetActive(true);
+        else
+            Debug.LogWarning("[UIManager] winText not assigned in Inspector!");
     }
 
-    // small debug helper: press K to simulate a pickup in play mode
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.K)) OnPickupCollected();
