@@ -57,7 +57,7 @@ public class UIManager : MonoBehaviour
     {
         if (pickupTextTMP != null)
         {
-            pickupTextTMP.text = $"PickUps: {remainingPickups}";
+            pickupTextTMP.text = $"Souls: {remainingPickups}";
         }
         else
         {
