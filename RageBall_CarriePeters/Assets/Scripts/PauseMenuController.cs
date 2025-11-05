@@ -9,7 +9,11 @@ public class PauseMenuController : MonoBehaviour
     public Slider volumeSlider;      // single slider
 
     [Header("Audio Sources")]
-    public List<AudioSource> audioSources = new List<AudioSource>(); // all music/sfx
+    public List<AudioSource> audioSources = new List<AudioSource>();
+
+    [Header("Settings")]
+    [Range(0f, 1f)]
+    public float defaultVolume = 0.5f;   // start at 50%
 
     bool isPaused = false;
 
@@ -24,9 +28,12 @@ public class PauseMenuController : MonoBehaviour
         {
             volumeSlider.minValue = 0f;
             volumeSlider.maxValue = 1f;
-            volumeSlider.value = 1f;
+            volumeSlider.value = defaultVolume;
             volumeSlider.onValueChanged.AddListener(SetVolume);
         }
+
+        // push the default volume to all audio sources at start
+        SetVolume(defaultVolume);
     }
 
     void Update()
@@ -60,9 +67,6 @@ public class PauseMenuController : MonoBehaviour
     {
         Time.timeScale = 1f;
         Application.Quit();
-        // #if UNITY_EDITOR
-        // UnityEditor.EditorApplication.isPlaying = false;
-        // #endif
     }
 
     void SetVolume(float value)

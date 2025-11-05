@@ -4,110 +4,108 @@ using TMPro;
 
 public class PlayerController : MonoBehaviour
 {
- // Rigidbody of the player.
- private Rigidbody rb; 
+    // Rigidbody of the player.
+    private Rigidbody rb; 
 
- // Variable to keep track of collected "PickUp" objects.
- private int count;
+    // Variable to keep track of collected "PickUp" objects.
+    private int count;
 
- // Movement along X and Y axes.
- private float movementX;
- private float movementY;
+    // Movement along X and Y axes.
+    private float movementX;
+    private float movementY;
 
- // Speed at which the player moves.
- public float speed = 0;
+    // Speed at which the player moves.
+    public float speed = 0;
 
- // UI text component to display count of "PickUp" objects collected.
- public TextMeshProUGUI countText;
+    // JUMP STUFF
+    public float jumpForce = 5f;     // how strong the jump is
+    private bool isGrounded = true;  // simple grounded flag
 
- // UI object to display winning text.
- public GameObject winTextObject;
+    // UI text component to display count of "PickUp" objects collected.
+    public TextMeshProUGUI countText;
 
- // Start is called before the first frame update.
- void Start()
+    // UI object to display winning text.
+    public GameObject winTextObject;
+
+    void Start()
     {
- // Get and store the Rigidbody component attached to the player.
         rb = GetComponent<Rigidbody>();
-
- // Initialize count to zero.
         count = 0;
-
- // Update the count display.
         SetCountText();
-
- // Initially set the win text to be inactive.
         winTextObject.SetActive(false);
     }
  
- // This function is called when a move input is detected.
- void OnMove(InputValue movementValue)
+    // movement from Input System
+    void OnMove(InputValue movementValue)
     {
- // Convert the input value into a Vector2 for movement.
         Vector2 movementVector = movementValue.Get<Vector2>();
-
- // Store the X and Y components of the movement.
         movementX = movementVector.x; 
         movementY = movementVector.y; 
     }
 
- // FixedUpdate is called once per fixed frame-rate frame.
- private void FixedUpdate() 
+    void Update()
     {
- // Create a 3D movement vector using the X and Y inputs.
-        Vector3 movement = new Vector3 (movementX, 0.0f, movementY);
+        // check for spacebar jump
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        {
+            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            isGrounded = false;
+        }
+    }
 
- // Apply force to the Rigidbody to move the player.
+    private void FixedUpdate() 
+    {
+        Vector3 movement = new Vector3 (movementX, 0.0f, movementY);
         rb.AddForce(movement * speed); 
     }
 
- 
- void OnTriggerEnter(Collider other) 
+    void OnTriggerEnter(Collider other) 
     {
- // Check if the object the player collided with has the "PickUp" tag.
- if (other.gameObject.CompareTag("PickUp")) 
+        if (other.gameObject.CompareTag("PickUp")) 
         {
- // Deactivate the collided object (making it disappear).
             other.gameObject.SetActive(false);
-
- // Increment the count of "PickUp" objects collected.
             count = count + 1;
-
- // Update the count display.
             SetCountText();
         }
     }
 
- // Function to update the displayed count of "PickUp" objects collected.
- void SetCountText() 
+    void SetCountText() 
     {
- // Update the count text with the current count.
         countText.text = "Count: " + count.ToString();
 
- // Check if the count has reached or exceeded the win condition.
- if (count >= 65)
+        if (count >= 65)
         {
- // Display the win text.
             winTextObject.SetActive(true);
-
- // Destroy the enemy GameObject.
             Destroy(GameObject.FindGameObjectWithTag("Enemy"));
         }
     }
 
-private void OnCollisionEnter(Collision collision)
-{
- if (collision.gameObject.CompareTag("Enemy"))
+    // handle collisions
+    private void OnCollisionEnter(Collision collision)
     {
- // Destroy the current object
-        Destroy(gameObject); 
- 
- // Update the winText to display "You Lose!"
-        winTextObject.gameObject.SetActive(true);
-        winTextObject.GetComponent<TextMeshProUGUI>().text = "You Lose!";
- 
+        // lose if enemy
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            Destroy(gameObject); 
+            winTextObject.gameObject.SetActive(true);
+            winTextObject.GetComponent<TextMeshProUGUI>().text = "You Lose!";
+        }
+        else
+        {
+            // if we hit anything else that's the ground, allow jumping again
+            // make sure your floor is tagged "Ground" OR remove the tag check to allow any surface
+            if (collision.gameObject.CompareTag("Ground"))
+            {
+                isGrounded = true;
+            }
+        }
     }
 
-}
-
-
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
+        }
+    }
 }
