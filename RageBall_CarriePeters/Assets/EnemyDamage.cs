@@ -1,54 +1,91 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class EnemyDamage : MonoBehaviour
 {
-    [Tooltip("Fraction of the player's MAX health to remove on hit.")]
-    public float damageFraction = 0.25f;   // 1/4 HP
-
-    public float knockbackForce = 6f;
+    [Header("Damage")]
+    [Range(0f, 1f)] public float damageFraction = 0.25f; // 1/4 max HP
     public string playerTag = "Player";
+    public float hitCooldown = 0.6f;
 
-    // if your enemies use triggers instead of colliders, keep both
-    private void OnCollisionEnter(Collision collision)
+    [Header("Knockback")]
+    public float knockbackForce = 6f;
+    public float knockbackUpward = 0.75f;
+
+    private float _lastHitTime = -999f;
+
+    private void Reset()
     {
-        TryHitPlayer(collision.gameObject, collision.contacts.Length > 0 ? collision.contacts[0].point : transform.position);
+        Collider c = GetComponent<Collider>();
+        if (c != null) c.isTrigger = true;
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        TryHitPlayer(other.gameObject, other.transform.position);
+        TryHit(other);
     }
 
-    private void TryHitPlayer(GameObject other, Vector3 hitPoint)
+    private void OnTriggerStay(Collider other)
     {
-        if (!other.CompareTag(playerTag))
-            return;
+        // Delete this method if you want only one hit per touch.
+        TryHit(other);
+    }
 
-        // find the health on the player
-        PlayerHealth health =
-            other.GetComponent<PlayerHealth>() ??
-            other.GetComponentInParent<PlayerHealth>() ??
-            other.GetComponentInChildren<PlayerHealth>();
+    private void TryHit(Component other)
+    {
+        if (!other.CompareTag(playerTag)) return;
+        if (Time.time - _lastHitTime < hitCooldown) return;
+        _lastHitTime = Time.time;
 
-        if (health != null)
-        {
-            // 1/4 of MAX health
-            float dmg = health.maxHealth * damageFraction;
-            health.TakeDamage(dmg);
-        }
+        // ---- DAMAGE ----
+        // Try fraction-based methods if your player has them:
+        other.SendMessage("TakeFractionDamage", damageFraction, SendMessageOptions.DontRequireReceiver);
+        other.SendMessage("ApplyFractionDamage", damageFraction, SendMessageOptions.DontRequireReceiver);
 
-        // knockback
-        Rigidbody rb =
-            other.GetComponent<Rigidbody>() ??
-            other.GetComponentInParent<Rigidbody>() ??
-            other.GetComponentInChildren<Rigidbody>();
+        // Otherwise compute an absolute amount (defaults to 25 if no maxHealth found):
+        int amount = 25;
+        int max = TryGetMaxHealthFromComponents((other as Component).gameObject);
+        if (max > 0) amount = Mathf.CeilToInt(max * damageFraction);
 
+        other.SendMessage("TakeDamage", amount, SendMessageOptions.DontRequireReceiver);
+        other.SendMessage("ApplyDamage", amount, SendMessageOptions.DontRequireReceiver);
+
+        // ---- KNOCKBACK ----
+        Rigidbody rb = other.GetComponentInParent<Rigidbody>();
+        if (rb == null) rb = other.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            // push player away from enemy
-            Vector3 dir = (other.transform.position - transform.position).normalized;
-            dir.y = 0.25f; // tiny upward so it feels nicer
-            rb.AddForce(dir * knockbackForce, ForceMode.Impulse);
+            Vector3 dir = (rb.worldCenterOfMass - transform.position).normalized;
+            Vector3 force = dir * knockbackForce + Vector3.up * knockbackUpward;
+            rb.AddForce(force, ForceMode.Impulse);
         }
+    }
+
+    private int TryGetMaxHealthFromComponents(GameObject go)
+    {
+        Component[] comps = go.GetComponentsInParent<Component>(true);
+        for (int i = 0; i < comps.Length; i++)
+        {
+            Component c = comps[i];
+            if (c == null) continue;
+            System.Type t = c.GetType();
+
+            var f = t.GetField("maxHealth");
+            if (f != null)
+            {
+                object v = f.GetValue(c);
+                if (v is int) return (int)v;
+                if (v is float) return Mathf.RoundToInt((float)v);
+            }
+
+            var p = t.GetProperty("maxHealth");
+            if (p != null && p.CanRead)
+            {
+                object v = p.GetValue(c, null);
+                if (v is int) return (int)v;
+                if (v is float) return Mathf.RoundToInt((float)v);
+            }
+        }
+        return -1;
     }
 }
