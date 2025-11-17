@@ -83,29 +83,7 @@ public class UIManager : MonoBehaviour
 
     // ---------- LOSE UI ----------
     // Called by PlayerHealth.onDeath (wire in Inspector), NOT by enemies/lava.
-    public void ShowLoseUI()
-    {
-        if (_loseShown) return;      // ignore duplicates
-        _loseShown = true;
-
-        // Print who called this (helps find any rogue "auto lose" triggers)
-        UnityEngine.Debug.LogError("[ShowLoseUI] CALLED BY:\n" + new StackTrace(1, true));
-
-        if (!losePanel)
-        {
-            UnityEngine.Debug.LogWarning("[UIManager] losePanel is missing or was destroyed.");
-            return;
-        }
-
-        losePanel.SetActive(true);
-
-        if (pauseOnLose) Time.timeScale = 0f;
-        if (showCursorOnLose)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-    }
+   
 
     void Update()
     {
