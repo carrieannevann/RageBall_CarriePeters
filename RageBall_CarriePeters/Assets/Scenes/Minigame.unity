@@ -4978,7 +4978,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 203284254}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 559184104}
+        m_TargetAssemblyTypeName: GameOverUI, Assembly-CSharp
+        m_MethodName: RestartLevel
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &203284254
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13035,6 +13047,7 @@ GameObject:
   - component: {fileID: 559184103}
   - component: {fileID: 559184102}
   - component: {fileID: 559184101}
+  - component: {fileID: 559184104}
   m_Layer: 5
   m_Name: LosePanel
   m_TagString: Untagged
@@ -13101,6 +13114,18 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &559184104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 559184100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b7cab9d67ef0744bd4ba73978edbf4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &565462747 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2114089421622561578, guid: 14dfd592f3ca9a3408b3d35c004ea0ec, type: 3}
