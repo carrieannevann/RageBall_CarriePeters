@@ -83,23 +83,20 @@ public class PlayerController : MonoBehaviour
     // handle collisions
     private void OnCollisionEnter(Collision collision)
     {
-        // lose if enemy
         if (collision.gameObject.CompareTag("Enemy"))
         {
-            Destroy(gameObject); 
-            winTextObject.gameObject.SetActive(true);
-            winTextObject.GetComponent<TextMeshProUGUI>().text = "You Lose!";
-        }
-        else
-        {
-            // if we hit anything else that's the ground, allow jumping again
-            // make sure your floor is tagged "Ground" OR remove the tag check to allow any surface
-            if (collision.gameObject.CompareTag("Ground"))
+            PlayerHealth health = GetComponent<PlayerHealth>();
+            if (health != null)
             {
-                isGrounded = true;
+                health.TakeDamage(25f);  // or whatever damage per hit you want
             }
         }
+        else if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
     }
+
 
     private void OnCollisionExit(Collision collision)
     {

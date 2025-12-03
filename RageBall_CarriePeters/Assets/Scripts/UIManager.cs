@@ -1,6 +1,7 @@
 // UIManager.cs
 using UnityEngine;
 using TMPro;
+using System.Diagnostics; // for StackTrace (debug tracing)
 
 public class UIManager : MonoBehaviour
 {
@@ -12,38 +13,46 @@ public class UIManager : MonoBehaviour
     [Header("Win UI")]
     public GameObject winText;              // drag your "WinText" UI object here
 
+    [Header("Lose UI")]
+    public GameObject losePanel;            // drag your "You Lose" panel here
+    public bool pauseOnLose = true;         // pause when lose is shown
+    public bool showCursorOnLose = true;    // unlock cursor on lose
+
     [Header("Optional Settings")]
     public bool autoCountPickupsAtStart = true;
 
     int remainingPickups = 0;
 
+    // Gate to prevent duplicate lose calls (and to stop spammy errors)
+    bool _loseShown = false;
+
     void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else { Destroy(gameObject); return; }
     }
 
     void Start()
     {
-        // make sure win text starts hidden
-        if (winText != null)
-            winText.SetActive(false);
+        // make sure win/lose start hidden
+        if (winText != null) winText.SetActive(false);
+        if (losePanel != null) losePanel.SetActive(false);
 
         if (autoCountPickupsAtStart)
         {
             GameObject[] pickups = GameObject.FindGameObjectsWithTag("PickUp");
             remainingPickups = pickups != null ? pickups.Length : 0;
-            Debug.Log($"[UIManager] Found {remainingPickups} objects tagged 'PickUp' at Start.");
+            UnityEngine.Debug.Log($"[UIManager] Found {remainingPickups} objects tagged 'PickUp' at Start.");
         }
         UpdateUI();
     }
 
     public void OnPickupCollected()
     {
-        Debug.Log("[UIManager] OnPickupCollected() called. remaining before = " + remainingPickups);
+        UnityEngine.Debug.Log("[UIManager] OnPickupCollected() called. remaining before = " + remainingPickups);
         remainingPickups = Mathf.Max(0, remainingPickups - 1);
         UpdateUI();
-        Debug.Log("[UIManager] remaining after = " + remainingPickups);
+        UnityEngine.Debug.Log("[UIManager] remaining after = " + remainingPickups);
         if (remainingPickups == 0) LevelComplete();
     }
 
@@ -61,23 +70,26 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning("[UIManager] pickupTextTMP not assigned in Inspector!");
+            UnityEngine.Debug.LogWarning("[UIManager] pickupTextTMP not assigned in Inspector!");
         }
     }
 
     void LevelComplete()
     {
-        Debug.Log("[UIManager] All pickups collected!");
-
-        // show the win text
-        if (winText != null)
-            winText.SetActive(true);
-        else
-            Debug.LogWarning("[UIManager] winText not assigned in Inspector!");
+        UnityEngine.Debug.Log("[UIManager] All pickups collected!");
+        if (winText != null) winText.SetActive(true);
+        else UnityEngine.Debug.LogWarning("[UIManager] winText not assigned in Inspector!");
     }
+
+    // ---------- LOSE UI ----------
+    // Called by PlayerHealth.onDeath (wire in Inspector), NOT by enemies/lava.
+   
 
     void Update()
     {
+        // debug helper to test death flow quickly (optional)
+        // if (Input.GetKeyDown(KeyCode.L)) ShowLoseUI();
+
         if (Input.GetKeyDown(KeyCode.K)) OnPickupCollected();
     }
 }
